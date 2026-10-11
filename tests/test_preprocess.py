@@ -49,3 +49,12 @@ class PreprocessTests(unittest.TestCase):
 
         self.assertEqual(alpha_june_2["alert_count"], 0)
         self.assertEqual(beta_june_1["alert_count"], 0)
+
+    def test_missing_required_columns_raise_clear_error(self):
+        path = self._write_csv(
+            "region,started_at,finished_at\n"
+            "Kyiv,2024-06-01T09:00:00Z,\n"
+        )
+
+        with self.assertRaisesRegex(ValueError, "missing required columns.*naive"):
+            load_raw_alerts(path)
