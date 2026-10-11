@@ -1,0 +1,24 @@
+__pycache__/
+*.py[cod]
+*$py.class
+
+.venv/
+venv/
+env/
+.env
+.matplotlib-cache/
+
+.ipynb_checkpoints/
+.DS_Store
+
+# Large/intermediate data can be reproduced from the source CSV and pipeline.
+data/raw/
+data/processed/
+data/predictions/
+
+# Keep final report artifacts tracked for reviewers:
+# - data/source_metadata.json
+# - reports/validation_metrics.csv
+# - reports/test_metrics.csv
+# - reports/figures/*.png
+# - reports/final_report.md
