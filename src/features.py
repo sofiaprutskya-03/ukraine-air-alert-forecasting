@@ -9,7 +9,7 @@ ROLLING_WINDOWS = [7, 14, 28]
 
 
 def build_supervised_table(daily: pd.DataFrame) -> pd.DataFrame:
-    """Build target-date rows with calendar features known by the previous day."""
+    """Build target-date rows with features known by the previous day."""
     df = daily.sort_values(["oblast", "date_kyiv"]).copy()
     df = df.rename(
         columns={
@@ -19,6 +19,11 @@ def build_supervised_table(daily: pd.DataFrame) -> pd.DataFrame:
         }
     )
     df["forecast_date"] = df["target_date"] - pd.Timedelta(days=1)
+
+    grouped_counts = df.groupby("oblast")["y_alert_count"]
+
+    for lag in LAG_DAYS:
+        df[f"count_lag_{lag}"] = grouped_counts.shift(lag)
 
     df["target_day_of_week"] = df["target_date"].dt.dayofweek
     df["target_month"] = df["target_date"].dt.month
