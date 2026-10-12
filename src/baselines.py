@@ -5,6 +5,8 @@ from src.evaluate import evaluate_predictions
 
 BASELINE_COLUMNS = {
     "baseline_yesterday": "count_lag_1",
+    "baseline_lag_7": "count_lag_7",
+    "baseline_rolling_7_mean": "rolling_7_mean",
 }
 
 
