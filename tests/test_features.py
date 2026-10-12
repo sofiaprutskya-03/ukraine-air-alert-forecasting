@@ -38,3 +38,28 @@ class FeatureLeakageTests(unittest.TestCase):
         self.assertEqual(row["count_lag_7"], 21)
         self.assertEqual(row["rolling_7_mean"], 24)
         self.assertEqual(row["national_count_lag_1"], 154)
+
+    def test_same_target_date_value_does_not_change_same_row_features(self):
+        target_date = pd.Timestamp("2024-01-29")
+        base = build_supervised_table(make_daily_table())
+        mutated = build_supervised_table(
+            make_daily_table(overrides={("Alpha", target_date): 999})
+        )
+
+        base_row = base[
+            (base["oblast"] == "Alpha") & (base["target_date"] == target_date)
+        ].iloc[0]
+        mutated_row = mutated[
+            (mutated["oblast"] == "Alpha") & (mutated["target_date"] == target_date)
+        ].iloc[0]
+
+        self.assertEqual(mutated_row["y_alert_count"], 999)
+        feature_columns = [
+            column
+            for column in base.columns
+            if column.startswith("count_lag_")
+            or column.startswith("rolling_")
+            or column.startswith("national_")
+        ]
+        for column in feature_columns:
+            self.assertEqual(base_row[column], mutated_row[column], column)
