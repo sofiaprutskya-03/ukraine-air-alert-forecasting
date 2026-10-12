@@ -8,7 +8,6 @@ LAG_DAYS = [1, 2, 3, 7, 14, 28]
 ROLLING_WINDOWS = [7, 14, 28]
 
 
-# Group-wise rolling aggregates computed safely over shifted time-series
 def _safe_grouped_rolling_mean(
     shifted_counts: pd.Series, oblasts: pd.Series, window: int
 ) -> pd.Series:
