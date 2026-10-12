@@ -6,6 +6,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 
 def evaluate_predictions(y_true, y_pred, model_name: str, split: str | None = None) -> dict:
+    """Compute regression evaluation metrics (MAE and RMSE)."""
     rmse = np.sqrt(mean_squared_error(y_true, y_pred))
     metrics = {
         "model": model_name,
