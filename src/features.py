@@ -42,7 +42,12 @@ def _safe_grouped_rolling_std(
 
 
 def build_supervised_table(daily: pd.DataFrame) -> pd.DataFrame:
-    """Build target-date rows with features known by the previous day."""
+    """Build target-date rows with features known by the previous day.
+
+    Leakage warning: the current row's alert_count is the target for target_date.
+    Every lag or rolling feature below is shifted first, so it only uses dates
+    <= target_date - 1.
+    """
     df = daily.sort_values(["oblast", "date_kyiv"]).copy()
     df = df.rename(
         columns={
@@ -67,10 +72,39 @@ def build_supervised_table(daily: pd.DataFrame) -> pd.DataFrame:
     df["rolling_7_max"] = _safe_grouped_rolling_max(shifted_counts, df["oblast"], 7)
     df["rolling_28_std"] = _safe_grouped_rolling_std(shifted_counts, df["oblast"], 28)
 
+    national = (
+        daily.groupby("date_kyiv", as_index=False)["alert_count"]
+        .sum()
+        .rename(columns={"date_kyiv": "target_date", "alert_count": "national_count"})
+        .sort_values("target_date")
+    )
+    national["national_count_lag_1"] = national["national_count"].shift(1)
+    national["national_rolling_7_mean"] = (
+        national["national_count"].shift(1).rolling(window=7, min_periods=7).mean()
+    )
+    df = df.merge(
+        national[["target_date", "national_count_lag_1", "national_rolling_7_mean"]],
+        on="target_date",
+        how="left",
+    )
+
     df["target_day_of_week"] = df["target_date"].dt.dayofweek
     df["target_month"] = df["target_date"].dt.month
     df["target_day_of_year"] = df["target_date"].dt.dayofyear
     df["target_is_weekend"] = df["target_day_of_week"].isin([5, 6]).astype(int)
     df["days_since_start"] = (df["target_date"] - df["target_date"].min()).dt.days
+
+    feature_start = df["target_date"].min() + pd.Timedelta(days=MAX_LAG_DAYS)
+    df = df.loc[df["target_date"] >= feature_start].copy()
+
+    numeric_columns = [
+        column
+        for column in df.columns
+        if column.startswith("count_lag_")
+        or column.startswith("rolling_")
+        or column.startswith("national_")
+    ]
+    df[numeric_columns] = df[numeric_columns].replace([np.inf, -np.inf], np.nan)
+    df = df.dropna(subset=numeric_columns)
 
     return df.reset_index(drop=True)
