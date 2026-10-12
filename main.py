@@ -50,6 +50,36 @@ def parse_args():
     return parser.parse_args()
 
 
+def try_generate_plots(skip_plots: bool) -> bool:
+    if skip_plots:
+        print("Skipping plots because --skip-plots was provided.")
+        return False
+
+    try:
+        from src.plots import (
+            plot_mae_by_oblast,
+            plot_model_error_over_time,
+            plot_predictions_over_time,
+            plot_recent_oblast_heatmap,
+        )
+
+        PLOTS_DIR.mkdir(parents=True, exist_ok=True)
+        plot_predictions_over_time(
+            TEST_PREDICTIONS_PATH, PLOTS_DIR / "actual_vs_predicted.png"
+        )
+        plot_mae_by_oblast(TEST_PREDICTIONS_PATH, PLOTS_DIR / "mae_by_oblast.png")
+        plot_recent_oblast_heatmap(
+            TEST_PREDICTIONS_PATH, PLOTS_DIR / "recent_oblast_heatmap.png"
+        )
+        plot_model_error_over_time(
+            TEST_PREDICTIONS_PATH, PLOTS_DIR / "model_error_over_time.png"
+        )
+        return True
+    except Exception as exc:
+        print(f"WARNING: plot generation failed, but core pipeline outputs were saved: {exc}")
+        return False
+
+
 def main():
     args = parse_args()
 
@@ -108,6 +138,20 @@ def main():
         model_predictions=model_test_pred,
         output_path=TEST_PREDICTIONS_PATH,
     )
+
+    plots_created = try_generate_plots(args.skip_plots)
+
+    print("Pipeline completed.")
+    print(f"Processed daily table: {PROCESSED_DAILY_PATH}")
+    print(f"Source metadata: {SOURCE_METADATA_PATH}")
+    print(f"Data quality report: {DATA_QUALITY_REPORT_PATH}")
+    print(f"Validation metrics: {VALIDATION_METRICS_PATH}")
+    print(f"Test metrics: {TEST_METRICS_PATH}")
+    print(f"Test predictions: {TEST_PREDICTIONS_PATH}")
+    if plots_created:
+        print(f"Plots: {PLOTS_DIR}")
+    else:
+        print("Plots: skipped or unavailable")
 
 
 if __name__ == "__main__":
