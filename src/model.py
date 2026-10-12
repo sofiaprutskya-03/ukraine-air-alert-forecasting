@@ -54,3 +54,10 @@ def make_model_pipeline() -> Pipeline:
         ]
     )
     return pipeline
+
+
+def train_model(train_df: pd.DataFrame) -> tuple[Pipeline, list[str]]:
+    """Train the sklearn model on the rows supplied by the caller."""
+    pipeline = make_model_pipeline()
+    pipeline.fit(train_df[FEATURE_COLUMNS], train_df["y_alert_count"])
+    return pipeline, FEATURE_COLUMNS
