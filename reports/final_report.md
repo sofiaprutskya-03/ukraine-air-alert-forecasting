@@ -138,3 +138,40 @@ Interpretation placeholder:
 
 ## Figures To Discuss
 
+Generated figures:
+
+- `reports/figures/actual_vs_predicted.png`
+- `reports/figures/mae_by_oblast.png`
+- `reports/figures/recent_oblast_heatmap.png`
+- `reports/figures/model_error_over_time.png`
+
+Plot generation is intentionally non-critical. If Matplotlib is unavailable or
+slow because of system font discovery, the pipeline can be run with
+`--skip-plots`; metrics, predictions, metadata, and the data-quality report are
+still produced.
+
+Discussion placeholders:
+
+- national trend fit: `TODO`
+- oblasts with largest errors: `TODO`
+- test-period alert pattern: `TODO`
+- days with largest national total error: `TODO`
+
+## Leakage Controls
+
+The project uses shifted lag features, shifted rolling features, and a
+chronological split. It avoids target-date alert information, random splitting,
+future rolling windows, and post-forecast text/media signals.
+
+See:
+
+```text
+reports/leakage_audit.md
+```
+
+## Limitations
+
+This model uses only historical alert-start patterns. It cannot anticipate
+future military actions, official warnings, infrastructure events, or breaking
+news. It should be treated as an educational forecasting benchmark and not as an
+operational warning system.
